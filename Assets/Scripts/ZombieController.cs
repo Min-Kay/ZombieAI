@@ -32,13 +32,13 @@ public class ZombieController : MonoBehaviour
     private bool isDie = false;
 
     [Header("Zombie Info")]
-    public float attackDist = 1.5f;
-    public float spreadDist = 3.0f;
+    public float attackDist = 1.0f;
+    public float spreadDist = 2.5f;
     public float patrolRadius = 15.0f;
-    public float callZombies = 10.0f;
+    public float callZombies = 7.0f;
     public float patrolSpeed = 1.5f;
-    public float chaseSpeed = 5.0f;
-    public float damping = 1.0f;
+    public float chaseSpeed = 6.0f;
+    public float damping = 2.0f;
     public float speed
     {
         get { return agent.velocity.magnitude; }
@@ -46,7 +46,6 @@ public class ZombieController : MonoBehaviour
 
     private float attackTime;
     private float idleTime;
-    private float dieTime;
 
      void Awake()
     {
@@ -60,7 +59,8 @@ public class ZombieController : MonoBehaviour
 
         agent.updateRotation = false;
         agent.autoBraking = false;
-        agent.avoidancePriority = Random.Range(0, 10);
+        agent.avoidancePriority = Random.Range(30, 50);
+        agent.stoppingDistance = 0.3f;
     }
 
     void OnEnable()
@@ -77,14 +77,12 @@ public class ZombieController : MonoBehaviour
             if(state != State.IDLE)
             {
                 Quaternion rot = Quaternion.LookRotation(state != State.ATTACK ? agent.desiredVelocity : (targetPos - transform.position).normalized);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * damping);
+                transform.rotation = (transform.rotation != Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * damping)? Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * damping):transform.rotation);
             }
-            damping = ((state != State.ATTACK && state != State.CHASING) ? 1.0f : 7.0f);
+            damping = ((state != State.ATTACK && state != State.CHASING) ? 3.0f : 7.0f);
 
             if (Vector3.Distance(targetPos, transform.position) <= attackDist && state == State.CHASING)
-            {
                 state = State.ATTACK;
-            }
             else if (Vector3.Distance(targetPos, transform.position) > attackDist && state == State.ATTACK)
                 state = State.CHASING;
         }
@@ -151,11 +149,11 @@ public class ZombieController : MonoBehaviour
         }
     }
 
-    private bool RandomPoint(Vector3 center, float range, out Vector3 result)
+    private bool RandomPoint(Vector3 center, float range,out Vector3 result, bool normalized = false)
     {
         for (int i = 0; i < 30; i++)
         {
-            Vector3 randomPoint = center + Random.insideUnitSphere * range;
+            Vector3 randomPoint = (normalized? center + Random.insideUnitSphere.normalized * range:center + Random.insideUnitSphere * range);
             NavMeshHit hit;
             if (NavMesh.SamplePosition(randomPoint, out hit, 1.0f, NavMesh.AllAreas))
             {
@@ -167,11 +165,11 @@ public class ZombieController : MonoBehaviour
         return false;
     }
 
-    private Vector3 GetRandomPoint(Transform point = null, float radius = 0)
+    private Vector3 GetRandomPoint(Transform point = null, float radius = 0, bool normalized = false)
     {
         Vector3 _point;
 
-        if (RandomPoint(point.position, radius, out _point))
+        if (RandomPoint(point.position, radius,out _point, normalized))
         {
             Debug.DrawRay(_point, Vector3.up, Color.black, 3);
             return _point;
@@ -189,20 +187,23 @@ public class ZombieController : MonoBehaviour
             {
                 case State.DIE:
                     agent.isStopped = true;
+                    agent.ResetPath();
                     animator.SetBool("Move", false);
                     animator.SetTrigger("Die");
                     isDie = true;
                     break;
                 case State.IDLE:
                     agent.isStopped = true;
+                    agent.ResetPath();
                     animator.SetBool("Move", false);
+                    yield return new WaitForSeconds(idleTime);
                     RandomState();
                     break;
                 case State.PATROL:
                     agent.isStopped = false;
                     animator.SetBool("Move", true);
                     agent.speed = patrolSpeed;
-                    if (!agent.hasPath || Vector3.Distance(agent.pathEndPosition, transform.position) <= 0.1f)
+                    if (!agent.hasPath || Vector3.Distance(agent.pathEndPosition, transform.position) <= agent.stoppingDistance)
                     {
                         agent.SetDestination(GetRandomPoint(transform,patrolRadius));
                         RandomState();
@@ -216,9 +217,9 @@ public class ZombieController : MonoBehaviour
                     if (mode == Mode.Spread)
                     {
                         if (randomPos == null || Vector3.Distance(targetPos, randomPos) > spreadDist)
-                            randomPos = GetRandomPoint(target, spreadDist);
-                        else if(agent.remainingDistance < 0.8f)
-                            randomPos = GetRandomPoint(target, spreadDist+1.0f);
+                            randomPos = GetRandomPoint(target, spreadDist,true);
+                        else if(Vector3.Distance(agent.pathEndPosition, transform.position) <= agent.stoppingDistance)
+                            randomPos = GetRandomPoint(target, spreadDist,true);
                     }
                     agent.SetDestination(mode == Mode.Basic || Vector3.Distance(targetPos,transform.position) <= spreadDist?targetPos:randomPos);
                     break;
@@ -247,11 +248,11 @@ public class ZombieController : MonoBehaviour
 
     private void RandomState()
     {
-        var dice = Random.Range(0, 3);
+        var dice = Random.Range(0, 10);
 
         switch (dice)
         {
-            case 0:
+            case 3:
                 state = State.IDLE;
                 break;
             default:
@@ -272,9 +273,6 @@ public class ZombieController : MonoBehaviour
                     break;
                 case "Z_Idle":
                     idleTime = clip.length;
-                    break;
-                case "Z_FallingBack":
-                    dieTime = clip.length;
                     break;
             }
         }

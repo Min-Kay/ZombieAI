@@ -2714,11 +2714,11 @@ Rigidbody:
   m_GameObject: {fileID: 7868192457620969727}
   serializedVersion: 2
   m_Mass: 10
-  m_Drag: 0
+  m_Drag: 5
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 2
+  m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!195 &6011453184520137210
@@ -2730,9 +2730,9 @@ NavMeshAgent:
   m_GameObject: {fileID: 7868192457620969727}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.1
+  m_Radius: 0.3
   m_Speed: 3.5
-  m_Acceleration: 8
+  m_Acceleration: 10
   avoidancePriority: 0
   m_AngularSpeed: 120
   m_StoppingDistance: 0
@@ -2742,7 +2742,7 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: -0.07
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 2
 --- !u!114 &2753999026366096994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2763,8 +2763,8 @@ MonoBehaviour:
   spreadDist: 3
   patrolRadius: 15
   callZombies: 10
-  patrolSpeed: 1
-  chaseSpeed: 5
+  patrolSpeed: 2
+  chaseSpeed: 6
   damping: 1
 --- !u!114 &9137067408071735174
 MonoBehaviour:
