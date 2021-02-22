@@ -855,7 +855,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2753999025865042613}
   - component: {fileID: 2753999025865042610}
-  - component: {fileID: 2753999025865042611}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -920,14 +919,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &2753999025865042611
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2753999025865042608}
-  m_Enabled: 1
 --- !u!1 &2766421042934965019
 GameObject:
   m_ObjectHideFlags: 0
@@ -2655,10 +2646,11 @@ GameObject:
   - component: {fileID: 3882161440897206166}
   - component: {fileID: 6011453184520137201}
   - component: {fileID: 6011453184520137210}
-  - component: {fileID: 3688302546155640646}
   - component: {fileID: 2753999026366096994}
+  - component: {fileID: 9137067408071735174}
+  - component: {fileID: -7483943841954243280}
   m_Layer: 0
-  m_Name: Zombie1 2
+  m_Name: Zombie
   m_TagString: Zombie
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2672,7 +2664,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7868192457620969727}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.825609, y: 0, z: 41.96295}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 8761863920635073111}
@@ -2721,12 +2713,12 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7868192457620969727}
   serializedVersion: 2
-  m_Mass: 1
+  m_Mass: 10
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 2
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!195 &6011453184520137210
@@ -2741,30 +2733,16 @@ NavMeshAgent:
   m_Radius: 0.1
   m_Speed: 3.5
   m_Acceleration: 8
-  avoidancePriority: 50
+  avoidancePriority: 0
   m_AngularSpeed: 120
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
   m_Height: 2
-  m_BaseOffset: 0
+  m_BaseOffset: -0.07
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 0
---- !u!136 &3688302546155640646
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7868192457620969727}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 1, z: 0}
+  m_ObstacleAvoidanceType: 4
 --- !u!114 &2753999026366096994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2781,12 +2759,41 @@ MonoBehaviour:
   viewDistance: 20
   state: 0
   mode: 1
-  attackDist: 3
+  attackDist: 1.5
+  spreadDist: 3
   patrolRadius: 15
   callZombies: 10
   patrolSpeed: 1
-  chaseSpeed: 3
+  chaseSpeed: 5
   damping: 1
+--- !u!114 &9137067408071735174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7868192457620969727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0445cc2c3bab963418ff4af8aab21ac4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hp: 100
+  power: 10
+--- !u!136 &-7483943841954243280
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7868192457620969727}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.3
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &8002167464072156653
 GameObject:
   m_ObjectHideFlags: 0
