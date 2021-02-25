@@ -47,6 +47,8 @@ public class ZombieController : MonoBehaviour
     private float attackTime;
     private float idleTime;
 
+    private Vector3 forward = Vector3.zero;
+
      void Awake()
     {
         var player = GameObject.FindGameObjectWithTag("Player");
@@ -66,6 +68,7 @@ public class ZombieController : MonoBehaviour
     void OnEnable()
     {
         StartCoroutine(Action());
+        StartCoroutine(RandomState());
     }
 
     void FixedUpdate()
@@ -74,13 +77,11 @@ public class ZombieController : MonoBehaviour
         {
             animator.SetFloat("Speed", speed);
             View();
-            if(state != State.IDLE)
-            {
-                Quaternion rot = Quaternion.LookRotation(state != State.ATTACK ? agent.desiredVelocity : (targetPos - transform.position).normalized);
-                transform.rotation = (transform.rotation != Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * damping)? Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * damping):transform.rotation);
-            }
             damping = ((state != State.ATTACK && state != State.CHASING) ? 3.0f : 7.0f);
-
+    
+            Quaternion rot = Quaternion.LookRotation(state != State.ATTACK ? agent.desiredVelocity : (targetPos - transform.position).normalized);
+            transform.rotation = ((state != State.IDLE)?Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * damping):Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(forward), Time.deltaTime * damping));
+   
             if (Vector3.Distance(targetPos, transform.position) <= attackDist && state == State.CHASING)
                 state = State.ATTACK;
             else if (Vector3.Distance(targetPos, transform.position) > attackDist && state == State.ATTACK)
@@ -165,7 +166,7 @@ public class ZombieController : MonoBehaviour
         return false;
     }
 
-    private Vector3 GetRandomPoint(Transform point = null, float radius = 0, bool normalized = false)
+    private Vector3 SetRandomPoint(Transform point = null, float radius = 0, bool normalized = false)
     {
         Vector3 _point;
 
@@ -194,10 +195,7 @@ public class ZombieController : MonoBehaviour
                     break;
                 case State.IDLE:
                     agent.isStopped = true;
-                    agent.ResetPath();
                     animator.SetBool("Move", false);
-                    yield return new WaitForSeconds(idleTime);
-                    RandomState();
                     break;
                 case State.PATROL:
                     agent.isStopped = false;
@@ -205,8 +203,7 @@ public class ZombieController : MonoBehaviour
                     agent.speed = patrolSpeed;
                     if (!agent.hasPath || Vector3.Distance(agent.pathEndPosition, transform.position) <= agent.stoppingDistance)
                     {
-                        agent.SetDestination(GetRandomPoint(transform,patrolRadius));
-                        RandomState();
+                        agent.SetDestination(SetRandomPoint(transform,patrolRadius));
                     }
                     break;
                 case State.CHASING:
@@ -217,11 +214,11 @@ public class ZombieController : MonoBehaviour
                     if (mode == Mode.Spread)
                     {
                         if (randomPos == null || Vector3.Distance(targetPos, randomPos) > spreadDist)
-                            randomPos = GetRandomPoint(target, spreadDist,true);
-                        else if(Vector3.Distance(agent.pathEndPosition, transform.position) <= agent.stoppingDistance)
-                            randomPos = GetRandomPoint(target, spreadDist,true);
+                        {
+                            CheckTargetPosition();
+                        }
                     }
-                    agent.SetDestination(mode == Mode.Basic || Vector3.Distance(targetPos,transform.position) <= spreadDist?targetPos:randomPos);
+                    agent.SetDestination((mode == Mode.Basic || Vector3.Distance(targetPos,transform.position) <= spreadDist)?targetPos:randomPos);
                     break;
                 case State.ATTACK:
                     agent.isStopped = true;
@@ -236,6 +233,49 @@ public class ZombieController : MonoBehaviour
         }
     }
 
+    IEnumerator RandomState()
+    {
+        while (state == State.IDLE || state == State.PATROL)
+        {
+            yield return ws;
+
+            var dice = Random.Range(0, 10);
+
+            switch (dice)
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    state = State.IDLE;
+                    forward = transform.forward;
+                    agent.ResetPath();
+                    yield return new WaitForSeconds(idleTime);
+                    break;
+                default:
+                    state = State.PATROL;
+                    yield return new WaitUntil(() => Vector3.Distance(transform.position, agent.destination) <= (agent.stoppingDistance + 0.1f));
+                    break;
+            }
+        }
+    }
+
+    private void CheckTargetPosition()
+    {
+        randomPos = SetRandomPoint(target, spreadDist, true);
+        RaycastHit hit;
+        Vector3 direction = (targetPos - randomPos).normalized;
+        if (Physics.Raycast(randomPos, direction, out hit, Vector3.Distance(randomPos, targetPos)))
+        {
+            Debug.DrawRay(randomPos, direction, Color.magenta, 1);
+            if (hit.transform.gameObject !=  target.gameObject)
+            {
+                CheckTargetPosition();
+            }
+        }
+    }
+
     private void SetLocation()
     {
         targetPos = new Vector3(target.position.x, transform.position.y, target.position.z);
@@ -245,21 +285,8 @@ public class ZombieController : MonoBehaviour
     {
         target = tr;
     }
-
-    private void RandomState()
-    {
-        var dice = Random.Range(0, 10);
-
-        switch (dice)
-        {
-            case 3:
-                state = State.IDLE;
-                break;
-            default:
-                state = State.PATROL;
-                break;
-        }
-    }
+    
+    
 
     private void UpdateAnimClipTimes()
     {
